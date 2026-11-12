@@ -5,6 +5,43 @@ const QR = require('qrcode');
 const { slides, tools = {}, cats = [], meta = {} } = require('./content.js');
 const out = path.resolve(process.argv[2] || path.join(__dirname, 'dist'));
 
+// 主題：content.js 的 meta.theme（或環境變數 DECK_THEME）。不填＝原版深藍綠。主題檔 styles/themes/<name>.css，登記在 styles/themes/themes.json。
+const themeName = process.env.DECK_THEME || meta.theme || '';
+const THEMES = JSON.parse(fs.readFileSync(path.join(__dirname, 'styles/themes/themes.json'), 'utf8'));
+if (themeName && (!THEMES[themeName] || themeName.startsWith('_'))) throw new Error(`沒有主題 ${themeName}（可用：${Object.keys(THEMES).filter((k) => !k.startsWith('_')).join('、')}）`);
+const THEME = themeName ? THEMES[themeName] : { qr: '#0B1F2A', dark: [] };
+
+// 主題字型內嵌：只取簡報實際用到的字，轉成 woff2 寫進單檔，換電腦播放字體才不會跑掉。
+// 字型檔依 themes.json 的 fonts[].files 找；找不到檔或沒裝 subset-font 就略過（退回系統字）。DECK_FONTS=0 可關閉。
+async function fontCss(markup) {
+  const fonts = THEME.fonts || [];
+  if (!fonts.length || process.env.DECK_FONTS === '0') return '';
+  let subsetFont;
+  try { subsetFont = require('subset-font'); } catch { console.warn('字型未內嵌：沒有安裝 subset-font（npm ci 後再 build）'); return ''; }
+  const dirs = [process.env.DECK_FONT_DIR, path.join(__dirname, 'fonts'), path.join(__dirname, '..', '_fonts'), path.join(__dirname, '..', 'fonts')].filter(Boolean);
+  // HTML 實體先解碼再取字（&hellip;、&ldquo; 這類也要進子集）；不認得的實體當空白
+  const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', mdash: '—', ndash: '–', ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’',
+    middot: '·', bull: '•', times: '×', divide: '÷', plusmn: '±', deg: '°', le: '≤', ge: '≥', ne: '≠', rarr: '→', larr: '←', uarr: '↑', darr: '↓', copy: '©', reg: '®', trade: '™' };
+  const decode = (t) => t.replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (m, e) => {
+    if (e[0] !== '#') return ENT[e.toLowerCase()] ?? ' ';
+    const code = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : Number(e.slice(1));
+    return code > 0 && code <= 0x10FFFF ? String.fromCodePoint(code) : ' ';
+  });
+  const visible = decode(markup.replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<[^>]+>/g, ''));
+  const ascii = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('');
+  const text = [...new Set(visible + ascii + '，。、；：？！「」『』（）｜—…％→↓①②③④⑤⑥・／＋')].join('');
+  const faces = [], missing = [];
+  for (const f of fonts) {
+    const file = dirs.flatMap((d) => f.files.map((n) => path.join(d, n))).find((p) => fs.existsSync(p));
+    if (!file) { missing.push(`${f.family} ${f.weight}`); continue; }
+    const woff2 = await subsetFont(fs.readFileSync(file), text, { targetFormat: 'woff2' });
+    faces.push(`@font-face{font-family:'${f.family}';font-weight:${f.weight};font-style:normal;font-display:block;src:url(data:font/woff2;base64,${woff2.toString('base64')}) format('woff2');}`);
+  }
+  if (missing.length) console.warn(`字型未內嵌（找不到檔，搜尋 ${dirs.join('、')}）：${missing.join('、')}`);
+  if (faces.length) console.log(`內嵌字型 ${faces.length} 個，共 ${Math.round(faces.join('').length / 1024)} KB（${[...text].length} 個字）`);
+  return faces.length ? `\n<style>/* embedded fonts */\n${faces.join('\n')}</style>` : '';
+}
+
 const rv = (p) => fs.readFileSync(path.join(__dirname, 'node_modules/reveal.js', p), 'utf8');
 const img = (name) => {
   for (const dir of ['shots', 'assets']) for (const ext of ['jpg', 'png']) {
@@ -23,7 +60,7 @@ const HEX = { teal: '#3FC1B7', amber: '#F2B84B', coral: '#E8846B', green: '#6FCF
 const CIRC = ['', '①', '②', '③', '④', '⑤', '⑥'];
 
 async function qr(url) {
-  const svg = await QR.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0B1F2A', light: '#FFFFFF' } });
+  const svg = await QR.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: THEME.qr || '#0B1F2A', light: '#FFFFFF' } });
   return svg.replace('<svg ', '<svg class="qrsvg" ');
 }
 const qrCard = async (url, label, size = 'm') =>
@@ -36,8 +73,9 @@ const notes = (n) => (n ? `<aside class="notes">${n}</aside>` : '');
 let part = '';
 const R = {
   async title(s) {
+    const veil = img('bg-cover') || !themeName ? 'var(--veil, rgba(11,31,42,0.66))' : 'transparent';  // 主題模式且沒有封面底圖時不畫暗色罩
     return `<section ${bgAttr('bg-cover', 0.9)}>
-      <div style="padding:30px 38px; max-width:820px; background:rgba(11,31,42,0.66); border-radius:18px;">
+      <div style="padding:30px 38px; max-width:${themeName ? 980 : 820}px; background:${veil}; border-radius:18px;">
         <div class="chip amber">${s.kicker}</div>
         <h1>${s.title}</h1>
         <p class="lead" style="font-size:0.8em;">${s.sub}</p>
@@ -99,8 +137,8 @@ const R = {
     return `<section><div class="chip">${part}</div><h2><span class="lvtag">${s.lv}</span>${s.title}</h2>
       <p class="lead">${s.sub}</p>
       <div class="grid" style="grid-template-columns:1fr 1.15fr;align-items:start;">
-        <div><div class="card bar green" style="margin-bottom:14px"><div class="t" style="color:var(--green)">優點</div><ul>${s.pros.map((x) => `<li>${x}</li>`).join('')}</ul></div>
-        <div class="card bar coral"><div class="t" style="color:var(--coral)">注意</div><ul>${s.cons.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+        <div><div class="card bar green ok" style="margin-bottom:14px"><div class="t" style="color:var(--ok, var(--green))">優點</div><ul>${s.pros.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+        <div class="card bar coral warn"><div class="t" style="color:var(--warn, var(--coral))">注意</div><ul>${s.cons.map((x) => `<li>${x}</li>`).join('')}</ul></div>
         ${s.example ? `<div class="note" style="display:flex;gap:16px;align-items:center;margin-top:14px"><div style="flex:1"><b>${s.example.name}</b><br>${s.example.p}</div>${await qrCard(s.example.url, host(s.example.url), 's')}</div>` : ''}</div>
         <div>${src ? mock(src, s.shotUrl) : ''}</div>
       </div>${notes(s.notes)}</section>`;
@@ -216,10 +254,17 @@ const EXTRA_CSS = fs.readFileSync(path.join(__dirname, 'styles/deck.css'), 'utf8
   const secs = [];
   for (const [i, s] of slides.entries()) {
     if (!R[s.type]) throw new Error('no renderer ' + s.type);
-    const markup = await R[s.type](s);
+    let markup = await R[s.type](s);
+    // 主題的深色頁：依版型（themes.json 的 dark）或單頁 mode:'dark'／'light' 決定
+    const dark = s.mode ? s.mode === 'dark' : (THEME.dark || []).includes(s.type);
+    if (themeName && dark) {
+      const glow = THEME.darkGradient && !/^<section[^>]*data-background-image/.test(markup) ? ` data-background-gradient="${THEME.darkGradient}"` : '';  // 沒有底圖才畫「光」
+      markup = markup.replace(/^<section/, `<section data-mode="dark" data-background-color="${THEME.darkBg}"${glow}`);
+    }
     secs.push(`\n<!-- ${i + 1} ${s.type} -->\n` + markup.replace('<section', `<section data-slide-type="${esc(s.type)}"`));
   }
   const strip = (css) => css.replace(/@import[^;]+;/g, '');
+  const fontStyle = await fontCss(secs.join('\n'));
   const html = `<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -229,7 +274,7 @@ const EXTRA_CSS = fs.readFileSync(path.join(__dirname, 'styles/deck.css'), 'utf8
 <style>${strip(rv('dist/reset.css'))}</style>
 <style>${strip(rv('dist/reveal.css'))}</style>
 <style>${strip(rv('dist/theme/night.css'))}</style>
-<style>${refCss}${EXTRA_CSS}</style>
+<style>${refCss}${EXTRA_CSS}</style>${themeName ? `\n<style>/* theme: ${themeName} */\n${fs.readFileSync(path.join(__dirname, 'styles/themes', themeName + '.css'), 'utf8')}</style>` : ''}${fontStyle}
 </head>
 <body>
 <div class="reveal"><div class="slides">${secs.join('\n')}
@@ -243,5 +288,5 @@ Reveal.initialize({ width: 1280, height: 720, margin: 0.06, hash: true, transiti
 </body></html>`;
   fs.mkdirSync(out, { recursive: true });
   fs.writeFileSync(path.join(out, 'index.html'), html);
-  console.log('slides', slides.length, 'bytes', html.length);
+  console.log('slides', slides.length, 'bytes', html.length, themeName ? 'theme ' + themeName : '');
 })();

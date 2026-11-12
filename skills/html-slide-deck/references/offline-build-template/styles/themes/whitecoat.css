@@ -1,0 +1,115 @@
+/* 主題：白袍人生學院 CIS（2026-05 現行版，線上手冊 cis.drhao33.com）
+   白袍白 60／學院藍 30／曙光金 10。內容頁＝白袍白底；封面、章節、提問、收尾頁＝學院藍底反白（build.js 依 themes.json 加 data-mode="dark"）。
+   金色規則：金色文字只放深藍底；淺底上金色只做色塊、線條、底線（唯一例外：h1 大標的重點詞，沿用 CIS 版型 B 的寫法）。
+   --amber/--teal/--coral/--green 是上游的四個語意槽：這裡放「可當文字」的顏色；色塊與線條改用 --*-fill。 */
+:root {
+  --navy: #1A3D63; --ink: #0E2A45; --sky: #5E8CB5; --gold: #E0A235; --coat: #FBF9F3; --graphite: #2E343A; --cloud: #E9E7E0;
+  --bg: var(--coat); --card: #F3F1EA; --card2: var(--cloud); --line: #D9D6CC;
+  --text: var(--graphite); --muted: #565D64; --dim: #767B80; --heading: var(--navy);
+  --amber: var(--navy); --teal: var(--navy); --coral: var(--graphite); --green: var(--ink);
+  --amber-fill: var(--gold); --teal-fill: var(--sky); --coral-fill: var(--graphite); --green-fill: var(--navy);
+  --on-accent: var(--ink); --veil: rgba(14,42,69,0.72);
+  --ok: #2C7A4B; --warn: #B4452C; --ok-fill: #2C7A4B; --warn-fill: #B4452C; --on-signal: var(--coat);   /* 判斷訊號色，色票外，淺底版 */
+  --font-head: 'Noto Serif TC', 'Source Han Serif TC', Georgia, 'Songti TC', 'PMingLiU', serif;
+  --font-body: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --font-num: 'Montserrat', 'Noto Sans TC', 'PingFang TC', sans-serif;
+}
+/* 深色頁：在該頁重新定義變數，內部元件自動反白 */
+.reveal .slides section[data-mode="dark"] {
+  --bg: var(--navy); --card: var(--ink); --card2: rgba(94,140,181,0.24); --line: rgba(94,140,181,0.5);
+  --text: var(--coat); --muted: rgba(251,249,243,0.82); --dim: rgba(251,249,243,0.6); --heading: var(--coat);
+  --amber: var(--gold); --teal: #A9C3DB; --coral: var(--cloud); --green: var(--coat);
+  --amber-fill: var(--gold); --teal-fill: var(--sky); --coral-fill: var(--cloud); --green-fill: #7FA6C9;
+  --on-accent: var(--ink);
+  --ok: #6FCF97; --warn: #E8846B; --ok-fill: #6FCF97; --warn-fill: #E8846B; --on-signal: var(--ink);   /* 判斷訊號色，深底版 */
+  color: var(--text);
+}
+
+.reveal-viewport { background: var(--coat); }
+.reveal { font-family: var(--font-body); color: var(--text); }
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--font-head); font-weight: 900; letter-spacing: 0.01em; color: var(--heading); }
+.reveal h1 { line-height: 1.35; }
+.reveal h2::after, .reveal .chapter h1::after { content: ''; display: block; width: 56px; height: 4px; background: var(--gold); margin-top: 0.32em; }
+.reveal h1 b, .reveal h1 strong { color: var(--gold); }
+.reveal h2 b, .reveal h2 strong { color: inherit; box-shadow: inset 0 -0.3em 0 rgba(224,162,53,0.4); }
+.reveal section[data-mode="dark"] h2 b, .reveal section[data-mode="dark"] h2 strong { color: var(--gold); box-shadow: none; }
+.reveal a { color: var(--navy); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 0.18em; }
+.reveal section[data-mode="dark"] a { color: var(--gold); }
+.reveal code { background: var(--card2); color: var(--navy); }
+.reveal .progress { color: var(--gold); background: rgba(26,61,99,0.12); }
+.reveal .controls { color: var(--sky); }
+.reveal .slide-number { color: var(--dim); font-family: var(--font-num); }
+.has-dark-background .reveal .slide-number, .reveal.has-dark-background .slide-number { color: rgba(251,249,243,0.6); }
+
+/* 內容字級略放大（投影可讀性）；一頁放少一點，不要靠縮字塞 */
+/* 投影可讀性：整體字級比上游放大兩成（30px → 36px），內文再往上調；一頁放少一點，不要靠縮字塞 */
+.reveal { font-size: 36px; }
+.lead { font-size: 0.78em; }
+.card .t { font-size: 0.8em; }
+.card .d { font-size: 0.66em; }
+.card .k { font-size: 1em; }
+.pill { font-size: 0.5em; }
+.chip { font-size: 0.46em; }
+table.cmp { font-size: 0.66em; }
+.reveal ol.steps li { font-size: 0.78em; }
+.dq, .do { font-size: 0.7em; } .da { font-size: 0.64em; } .dd { font-size: 0.56em; }
+.qrcard .qrl { font-size: 0.36em; }
+.reveal .slide-number { right: auto; left: 14px; bottom: 12px; }
+.note { font-size: 0.68em; border-left: 4px solid var(--sky); border-radius: 0 14px 14px 0; }
+
+.chip { font-family: var(--font-num); color: var(--navy); letter-spacing: 0.08em; }
+.chip.amber { border-color: var(--gold); color: var(--amber); }
+.big { color: var(--heading); font-family: var(--font-head); font-weight: 900; }
+.big b, .big strong { box-shadow: inset 0 -0.3em 0 rgba(224,162,53,0.4); }
+.reveal section[data-mode="dark"] .big b, .reveal section[data-mode="dark"] .big strong { color: var(--gold); box-shadow: none; }
+.card { border: 1px solid var(--line); }
+.reveal section[data-mode="dark"] .card { border-color: transparent; }
+.card .k, .chapter .num, .demo .time, .rung .lv, .n { font-family: var(--font-num); }
+.bar { border-left-color: var(--teal-fill); }
+.bar.amber { border-color: var(--amber-fill); } .bar.coral { border-color: var(--coral-fill); } .bar.green { border-color: var(--green-fill); } .bar.teal { border-color: var(--teal-fill); }
+.steps li::before { background: var(--amber-fill); color: var(--on-accent); font-family: var(--font-num); }
+.steps.c-teal li::before { background: var(--teal-fill); color: var(--coat); }
+.steps.c-coral li::before { background: var(--coral-fill); color: var(--coat); }
+.steps.c-green li::before { background: var(--green-fill); color: var(--coat); }
+.reveal section[data-mode="dark"] .steps.c-coral li::before, .reveal section[data-mode="dark"] .steps.c-green li::before { color: var(--ink); }
+.callout, .lvtag, .domains .root { background: var(--amber-fill); color: var(--on-accent); }
+.pill.amber { border-color: var(--amber-fill); } .pill.teal { border-color: var(--teal-fill); } .pill.green { border-color: var(--green-fill); }
+.rung.coral { border-color: var(--coral-fill); } .rung.amber { border-color: var(--amber-fill); } .rung.teal { border-color: var(--teal-fill); } .rung.green { border-color: var(--green-fill); }
+.do.green { border-color: var(--green-fill); } .do.coral { border-color: var(--coral-fill); } .do.amber { border-color: var(--amber-fill); } .do.teal { border-color: var(--teal-fill); }
+.da { color: var(--muted); }
+.domains .subs span { border-left-color: var(--teal-fill); }
+.brace .amber { border-color: var(--amber-fill); } .brace .teal { border-color: var(--teal-fill); }
+table.cmp thead th { font-family: var(--font-head); }
+
+/* 章節頁（深色）：大數字用晨曦藍半透明，金色留給短線與重點詞 */
+.chapter .num { color: rgba(94,140,181,0.7); }
+.chapter .tools { color: var(--teal); }
+
+/* 截圖框、QR、提示框：硬寫色換回色票 */
+.mock { background: #fff; color: var(--graphite); box-shadow: 0 10px 30px rgba(14,42,69,0.18); border: 1px solid var(--line); }
+.mock .top { background: var(--cloud); color: var(--muted); }
+.mock .dot { background: var(--line) !important; }
+.mock .row { border-bottom-color: var(--cloud); }
+.mock .ok { color: var(--navy); }
+.mock .tag, .mock .url { background: var(--cloud); color: var(--navy); }
+.qrcard { box-shadow: 0 10px 30px rgba(14,42,69,0.16); border: 1px solid var(--line); }
+.reveal section[data-mode="dark"] .qrcard { border-color: transparent; box-shadow: 0 12px 40px rgba(14,42,69,0.55); }
+.qrcard .qrl { color: var(--ink); }
+.promptbox { background: var(--ink); border-color: var(--ink); }
+.promptbox .pl { color: var(--gold); }
+.reveal .promptbox pre { color: var(--coat); }
+.viz .before { background: var(--graphite); } .viz .after { background: var(--ink); }
+.viz .files, .viz .log { color: var(--coat); }
+.viz .divider { background: linear-gradient(to bottom, transparent, var(--gold), transparent); box-shadow: 0 0 12px var(--gold); }
+.viz .lbl.l { background: var(--cloud); color: var(--ink); } .viz .lbl.r { background: var(--gold); color: var(--ink); }
+.viz .log li { border-left-color: var(--gold); } .viz .log li b { color: var(--gold); }
+.slider { accent-color: var(--navy); }
+
+/* 判斷訊號色（只用在「注意／優點、迷思／實證、正解／錯誤」這類判斷，不當裝飾色；裝飾與分類仍只用色票七色）。
+   content.js 用法：決策樹結果或卡片的顏色欄填 'ok'（綠）或 'warn'（紅）。 */
+.card.ok .k, .card.ok .t, .pill.ok, .rung.ok .lv, table.cmp th.ok, .do.ok { color: var(--ok); }
+.card.warn .k, .card.warn .t, .pill.warn, .rung.warn .lv, table.cmp th.warn, .do.warn { color: var(--warn); }
+.bar.ok, .rung.ok, .do.ok, .pill.ok { border-color: var(--ok-fill); }
+.bar.warn, .rung.warn, .do.warn, .pill.warn { border-color: var(--warn-fill); }
+.steps.c-ok li::before { background: var(--ok-fill); color: var(--on-signal); }
+.steps.c-warn li::before { background: var(--warn-fill); color: var(--on-signal); }

@@ -7,7 +7,7 @@ description: 為既有的 reveal.js HTML 簡報加入效果：逐步出現（fra
 
 使用時機：使用者想讓 HTML 簡報更生動、更好講、更適合現場互動，或問「有什麼特效或技巧可以加」。簡報本體的製作流程（版型、圖片、QA、轉 PPTX）在 `html-slide-deck`；本 skill 只管加在其上的效果。加完效果一律回頭跑 `html-slide-deck` 的 `qa-screenshots.mjs`。
 
-加效果時沿用使用者與專案的署名、版型及頁數要求。`references/fixed-rules.md` 記錄吳易澄醫師製作自己的簡報時採用的設定。
+加效果時沿用使用者與專案的署名、版型及頁數要求。`references/fixed-rules.md` 記錄吳易澄醫師製作自己的簡報時採用的設定。張益豪醫師／白袍人生學院的簡報另依 `html-slide-deck` 的 `references/brand-rules.md`；特效用色只用主題內的顏色。
 
 ## 使用原則（先讀）
 

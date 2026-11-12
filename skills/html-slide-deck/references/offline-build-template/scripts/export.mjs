@@ -13,7 +13,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const enclosingSkill = resolve(root, '../..');
 const codexSkill = join(process.env.CODEX_HOME || join(homedir(), '.codex'), 'skills', 'html-slide-deck');
 const converterPath = (dir) => join(dir, 'scripts', 'content-to-pptx.mjs');
-const skill = values['skill-dir'] || [enclosingSkill, codexSkill].find((dir) => existsSync(converterPath(dir)));
+const claudeSkill = join(process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude'), 'skills', 'html-slide-deck');
+const skill = values['skill-dir'] || [enclosingSkill, claudeSkill, codexSkill].find((dir) => existsSync(converterPath(dir)));
 if (!skill || !existsSync(converterPath(resolve(skill)))) {
   console.error('找不到 html-slide-deck。請用 --skill-dir 指向技能目錄。');
   process.exit(2);

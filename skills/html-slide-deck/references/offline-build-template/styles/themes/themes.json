@@ -1,0 +1,125 @@
+{
+  "_說明": "build.js 讀這個檔。content.js 的 meta.theme（或環境變數 DECK_THEME）填主題名；不填＝上游原版深藍綠。dark＝哪些版型用深色頁（加 data-mode=\"dark\" 與底色）；單頁可在 content.js 寫 mode:'dark' 或 mode:'light' 覆寫。新增主題：加一個同名 .css 再在這裡登記。 darkGradient＝深色頁（沒有底圖時）右上角的「光」放射圖形，一頁一處。 fonts＝要內嵌的字型（build.js 只取簡報用到的字，轉 woff2 內嵌）；files 依序找檔名，搜尋目錄：環境變數 DECK_FONT_DIR、專案的 fonts/、上一層的 _fonts/ 或 fonts/。找不到檔或沒裝 subset-font 就略過內嵌、退回系統字。",
+  "whitecoat": {
+    "label": "白袍人生學院 CIS（白袍白 60／學院藍 30／曙光金 10）",
+    "qr": "#0E2A45",
+    "dark": [
+      "title",
+      "section",
+      "question",
+      "cat",
+      "end"
+    ],
+    "darkBg": "#1A3D63",
+    "darkGradient": "radial-gradient(circle 440px at 95% 5%, rgba(26,61,99,0) 26%, #1A3D63 74%), repeating-conic-gradient(from 0deg at 95% 5%, rgba(224,162,53,0.22) 0deg 9deg, rgba(224,162,53,0) 9deg 18deg)",
+    "fonts": [
+      {
+        "family": "Noto Serif TC",
+        "weight": "900",
+        "files": [
+          "NotoSerifTC_900Black.ttf",
+          "NotoSerifTC-Black.ttf",
+          "NotoSerifTC-Black.otf"
+        ]
+      },
+      {
+        "family": "Noto Serif TC",
+        "weight": "700",
+        "files": [
+          "NotoSerifTC_700Bold.ttf",
+          "NotoSerifTC-Bold.ttf",
+          "NotoSerifTC-Bold.otf"
+        ]
+      },
+      {
+        "family": "Noto Sans TC",
+        "weight": "300 500",
+        "files": [
+          "NotoSansTC_500Medium.ttf",
+          "NotoSansTC-Medium.ttf",
+          "NotoSansTC-Regular.ttf",
+          "NotoSansTC-Regular.otf"
+        ]
+      },
+      {
+        "family": "Noto Sans TC",
+        "weight": "700",
+        "files": [
+          "NotoSansTC_700Bold.ttf",
+          "NotoSansTC-Bold.ttf",
+          "NotoSansTC-Bold.otf"
+        ]
+      },
+      {
+        "family": "Noto Sans TC",
+        "weight": "900",
+        "files": [
+          "NotoSansTC_900Black.ttf",
+          "NotoSansTC-Black.ttf",
+          "NotoSansTC-Black.otf"
+        ]
+      }
+    ]
+  },
+  "drhao": {
+    "label": "張益豪醫師個人名義（沉靜藍底＋曙光金）",
+    "qr": "#0E2A45",
+    "dark": [
+      "title",
+      "section",
+      "question",
+      "cat",
+      "end"
+    ],
+    "darkBg": "#0E2A45",
+    "darkGradient": "radial-gradient(circle 440px at 95% 5%, rgba(14,42,69,0) 26%, #0E2A45 74%), repeating-conic-gradient(from 0deg at 95% 5%, rgba(224,162,53,0.18) 0deg 9deg, rgba(224,162,53,0) 9deg 18deg)",
+    "fonts": [
+      {
+        "family": "Noto Serif TC",
+        "weight": "900",
+        "files": [
+          "NotoSerifTC_900Black.ttf",
+          "NotoSerifTC-Black.ttf",
+          "NotoSerifTC-Black.otf"
+        ]
+      },
+      {
+        "family": "Noto Serif TC",
+        "weight": "700",
+        "files": [
+          "NotoSerifTC_700Bold.ttf",
+          "NotoSerifTC-Bold.ttf",
+          "NotoSerifTC-Bold.otf"
+        ]
+      },
+      {
+        "family": "Noto Sans TC",
+        "weight": "300 500",
+        "files": [
+          "NotoSansTC_500Medium.ttf",
+          "NotoSansTC-Medium.ttf",
+          "NotoSansTC-Regular.ttf",
+          "NotoSansTC-Regular.otf"
+        ]
+      },
+      {
+        "family": "Noto Sans TC",
+        "weight": "700",
+        "files": [
+          "NotoSansTC_700Bold.ttf",
+          "NotoSansTC-Bold.ttf",
+          "NotoSansTC-Bold.otf"
+        ]
+      },
+      {
+        "family": "Noto Sans TC",
+        "weight": "900",
+        "files": [
+          "NotoSansTC_900Black.ttf",
+          "NotoSansTC-Black.ttf",
+          "NotoSansTC-Black.otf"
+        ]
+      }
+    ]
+  }
+}

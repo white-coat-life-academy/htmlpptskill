@@ -8,6 +8,7 @@ description: 用 reveal.js 製作或修改 HTML 簡報（單檔、可離線、�
 `$SKILL` 代表本檔所在目錄（Claude Code：`~/.claude/skills/html-slide-deck`；Codex：`~/.codex/skills/…`；Gemini：`~/.gemini/skills/…`；Grok：`~/.grok/skills/…`）。腳本在 `$SKILL/scripts/`，範本在 `$SKILL/references/`。
 腳本需要 Node 20+。做法 B 在簡報專案內用 `npm ci` 安裝 Playwright 與 PptxGenJS。第一次可用 `npx playwright install chromium`，已有 Chromium 則可設 `CHROMIUM_PATH`。分開使用腳本時，套件由執行目錄往上搜尋，亦可設 `SKILL_PKG_ROOT`。部分輔助腳本需 Python 3。
 署名、Logo、配色和內容規格依使用者與專案規範。有專用的品牌簡報 skill 時，沿用它的內容與視覺指引。`references/fixed-rules.md` 保留吳易澄醫師自用的設定，供製作他的簡報時參考。
+**張益豪醫師／白袍人生學院的簡報**：開始前先讀 `$SKILL/references/brand-rules.md`（名義決定主題、署名條與頭銜紅線、版面與醫療用語、交付前先給預覽），全程遵守；主題 `whitecoat`／`drhao` 的做法與色票見 `$SKILL/references/brand-themes.md`。
 
 ## 0. 確認情境（已有資訊可直接沿用）
 
@@ -15,7 +16,7 @@ description: 用 reveal.js 製作或修改 HTML 簡報（單檔、可離線、�
 2. 圖片來源：AI 底圖（任何生圖工具；本 skill 附 `scripts/gen-image.sh`，預設綁 Codex CLI、可用 `GEN_CMD` 換）、真實截圖（Playwright，免登入頁面）、或兩者。需要登入的畫面請使用者提供截圖。
 3. 現場：有沒有網路（沒有→交付前一定內嵌）、要不要 QR、要不要特效（要→載入 `html-slide-effects`；醫學／學術場預設穩重）。
 
-未指定品牌樣式時，用 `references/reveal-template.html` 的預設色票與字型（Noto Sans TC → PingFang TC → Microsoft JhengHei）。
+套品牌主題時以主題檔為準：做法 B 在 content.js 的 `meta` 加 `theme: 'whitecoat'`（白袍人生學院名義）或 `'drhao'`（張益豪醫師個人名義），HTML 與 PPTX 一起套用。未指定品牌樣式時，用 `references/reveal-template.html` 的預設色票與字型（Noto Sans TC → PingFang TC → Microsoft JhengHei）。
 
 ## 1. 大綱 → 確認 → 生成
 
@@ -77,7 +78,7 @@ node $SKILL/scripts/build-handout.mjs <dir> <out.pptx> "<作者>"   # 一頁一�
 node $SKILL/scripts/content-to-pptx.mjs content.js out.pptx [--renderers my-renderers.mjs] [--img-dirs img,assets,shots] [--min-pt 15] [--strict] [--require-renderers]
 ```
 - 16:9 寬版（13.333×7.5 吋）；文字、表格、卡片都是 PowerPoint 物件，講者備註帶入，QR 內嵌成圖（附超連結）。
-- 內建版型包含 title、section、ask/question、statement、quiz、cards/three、stats、flow/steps、table、figure、labels、compare、decision、tool、flips、bars、photos、refs、end。單獨轉檔預設會提示並使用通用版面。加 `--require-renderers` 時，缺少版型或版型失敗會停止。
+- 內建版型包含 title、section、ask/question、statement、quiz、cards/three、stats、flow/steps、table、figure、labels、compare、decision、tool、flips、bars、photos、refs、end。品牌主題讀 content.js 的 `meta.theme`，也可加 `--theme whitecoat|drhao`；深色頁與淺色頁各用一個母片。單獨轉檔預設會提示並使用通用版面。加 `--require-renderers` 時，缺少版型或版型失敗會停止。
 - 專案自訂版型：`--renderers` 模組 `export default (kit) => ({ type: (s, k) => {...} })`，同名覆蓋內建；`kit` 有色票、`plain`、`textWidth`、`grid`、`marker`、`lvTag`；`k` 是 `pptx-kit.mjs` 的 `Kit`（`head`／`text`（自動縮字）／`stack`（直向堆疊並找出放得下的字級）／`card`／`table`／`image`（等比塞進框）／`note`／`src`／`qr`）。
 - 字級下限 `--min-pt`（預設 15pt）。放不下時寫 `<out>.pptx.warnings.txt`，`--strict` 會 exit 1。字寬是估算值，交付前用可用的簡報軟體渲染並逐頁檢查。
 - 動畫、fragment、翻牌不轉。

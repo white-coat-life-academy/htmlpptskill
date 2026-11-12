@@ -1,0 +1,85 @@
+/* 主題：張益豪醫師個人名義（深藍金外殼）
+   個人品牌尚未另立視覺識別，沿用白袍人生學院 CIS 色票：沉靜藍底＋白袍白字＋曙光金重點，晨曦藍做層次。
+   全份深色；金色只點關鍵詞、數字與短線。語意槽 --coral／--green 也收斂在色票內（不用紅綠）。 */
+:root {
+  --navy: #1A3D63; --ink: #0E2A45; --sky: #5E8CB5; --gold: #E0A235; --coat: #FBF9F3; --graphite: #2E343A; --cloud: #E9E7E0;
+  --bg: var(--ink); --card: var(--navy); --card2: #294E75; --line: #3A6189;
+  --text: var(--coat); --muted: #C7CBCD; --dim: #909CA5; --heading: var(--coat);
+  --amber: var(--gold); --teal: #A9C3DB; --coral: var(--cloud); --green: var(--coat);
+  --amber-fill: var(--gold); --teal-fill: var(--sky); --coral-fill: var(--cloud); --green-fill: #7FA6C9;
+  --on-accent: var(--ink); --veil: rgba(14,42,69,0.72);
+  --ok: #6FCF97; --warn: #E8846B; --ok-fill: #6FCF97; --warn-fill: #E8846B; --on-signal: var(--ink);   /* 判斷訊號色，色票外，深底版 */
+  --font-head: 'Noto Serif TC', 'Source Han Serif TC', Georgia, 'Songti TC', 'PMingLiU', serif;
+  --font-body: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --font-num: 'Montserrat', 'Noto Sans TC', 'PingFang TC', sans-serif;
+}
+.reveal-viewport { background: var(--ink); }
+.reveal { font-family: var(--font-body); color: var(--text); }
+/* 內容頁標題用超粗黑體，情緒頁（封面、章節、提問、收尾）才換宋體（本人 2026-11-12 確認） */
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--font-body); font-weight: 900; letter-spacing: 0; color: var(--heading); }
+.reveal .chapter h1, .reveal section[data-mode="dark"] h1, .big { font-family: var(--font-head); font-weight: 900; }
+.reveal h1 { line-height: 1.35; }
+.reveal h2::after, .reveal .chapter h1::after { content: ''; display: block; width: 56px; height: 4px; background: var(--gold); margin-top: 0.32em; }
+.reveal h1 b, .reveal h1 strong, .reveal h2 b, .reveal h2 strong { color: var(--gold); }
+.reveal a { color: var(--gold); }
+.reveal code { color: var(--teal); }
+.reveal .progress { color: var(--gold); }
+.reveal .controls { color: var(--sky); }
+.reveal .slide-number { font-family: var(--font-num); }
+
+/* 投影可讀性：整體字級比上游放大兩成（30px → 36px），內文再往上調；一頁放少一點，不要靠縮字塞 */
+.reveal { font-size: 36px; }
+.lead { font-size: 0.78em; }
+.card .t { font-size: 0.8em; }
+.card .d { font-size: 0.66em; }
+.card .k { font-size: 1em; }
+.pill { font-size: 0.5em; }
+.chip { font-size: 0.46em; }
+table.cmp { font-size: 0.66em; }
+.reveal ol.steps li { font-size: 0.78em; }
+.dq, .do { font-size: 0.7em; } .da { font-size: 0.64em; } .dd { font-size: 0.56em; }
+.qrcard .qrl { font-size: 0.36em; }
+.reveal .slide-number { right: auto; left: 14px; bottom: 12px; }
+.note { font-size: 0.68em; }
+
+.chip { font-family: var(--font-num); letter-spacing: 0.08em; }
+.big { color: var(--text); }
+.big b, .big strong { color: var(--gold); }
+.card .k, .chapter .num, .demo .time, .rung .lv, .n { font-family: var(--font-num); }
+.bar { border-left-color: var(--teal-fill); }
+.bar.amber { border-color: var(--amber-fill); } .bar.coral { border-color: var(--coral-fill); } .bar.green { border-color: var(--green-fill); } .bar.teal { border-color: var(--teal-fill); }
+.steps li::before { background: var(--amber-fill); color: var(--on-accent); font-family: var(--font-num); }
+.steps.c-teal li::before { background: var(--teal-fill); color: var(--coat); }
+.steps.c-coral li::before { background: var(--coral-fill); color: var(--ink); }
+.steps.c-green li::before { background: var(--green-fill); color: var(--ink); }
+.callout, .lvtag, .domains .root { background: var(--amber-fill); color: var(--on-accent); }
+.rung.coral { border-color: var(--coral-fill); } .rung.amber { border-color: var(--amber-fill); } .rung.teal { border-color: var(--teal-fill); } .rung.green { border-color: var(--green-fill); }
+.do.green { border-color: var(--green-fill); } .do.coral { border-color: var(--coral-fill); } .do.amber { border-color: var(--amber-fill); } .do.teal { border-color: var(--teal-fill); }
+.domains .subs span { border-left-color: var(--teal-fill); }
+.chapter .num { color: var(--gold); }
+
+
+.mock { color: var(--graphite); }
+.mock .top { background: var(--cloud); color: #565D64; }
+.mock .dot { background: #D9D6CC !important; }
+.mock .ok { color: var(--navy); }
+.mock .tag, .mock .url { background: var(--cloud); color: var(--navy); }
+.qrcard .qrl { color: var(--ink); }
+.promptbox { background: #0A2038; }
+.promptbox .pl { color: var(--gold); }
+.reveal .promptbox pre { color: var(--coat); }
+.viz .before { background: var(--graphite); } .viz .after { background: var(--navy); }
+.viz .files, .viz .log { color: var(--coat); }
+.viz .divider { background: linear-gradient(to bottom, transparent, var(--gold), transparent); box-shadow: 0 0 12px var(--gold); }
+.viz .lbl.l { background: var(--cloud); color: var(--ink); } .viz .lbl.r { background: var(--gold); color: var(--ink); }
+.viz .log li { border-left-color: var(--gold); } .viz .log li b { color: var(--gold); }
+.slider { accent-color: var(--gold); }
+
+/* 判斷訊號色（只用在「注意／優點、迷思／實證、正解／錯誤」這類判斷，不當裝飾色；裝飾與分類仍只用色票七色）。
+   content.js 用法：決策樹結果或卡片的顏色欄填 'ok'（綠）或 'warn'（紅）。 */
+.card.ok .k, .card.ok .t, .pill.ok, .rung.ok .lv, table.cmp th.ok, .do.ok { color: var(--ok); }
+.card.warn .k, .card.warn .t, .pill.warn, .rung.warn .lv, table.cmp th.warn, .do.warn { color: var(--warn); }
+.bar.ok, .rung.ok, .do.ok, .pill.ok { border-color: var(--ok-fill); }
+.bar.warn, .rung.warn, .do.warn, .pill.warn { border-color: var(--warn-fill); }
+.steps.c-ok li::before { background: var(--ok-fill); color: var(--on-signal); }
+.steps.c-warn li::before { background: var(--warn-fill); color: var(--on-signal); }

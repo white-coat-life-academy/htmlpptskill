@@ -1,6 +1,7 @@
 // 簡報內容：每個物件一頁。type 決定版型（渲染函式在 build.js），notes 為講者備註（播放時按 S 開講者視窗）。
 // 這是中性的起手範本（8 頁）；50 頁完整實例在 repo 的 examples/workshop-2026/content.js，複製過來即可 build。
 const meta = { title: '〈簡報標題〉', author: '〈講者姓名・單位〉' };
+// 品牌主題：在 meta 加 theme: 'whitecoat'（白袍人生學院名義）或 'drhao'（張益豪醫師個人名義）；不加＝上游原版深藍綠。說明見 skill 的 references/brand-themes.md。
 
 // tools／cats 給 tool、cat、catoverview 三種版型用；不用可留空物件。
 const tools = {

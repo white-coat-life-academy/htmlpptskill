@@ -4,6 +4,7 @@
 //   --img-dirs：圖片搜尋目錄（相對 content.js），依序找 <name>.jpg/.png
 //   --strict：有文字可能超框的警告就 exit 1
 //   --require-renderers：缺少版型或版型轉換失敗就停止
+//   --theme whitecoat|drhao：品牌主題（pptx-themes.mjs）；不給則看環境變數 DECK_THEME、再看 content.js 的 meta.theme；都沒有＝原版色票
 // 動畫、翻牌、fragment 不轉；翻牌頁改為正反面上下並列。字型 Microsoft JhengHei（Mac／Windows PowerPoint 都有）。
 import { createRequire } from 'node:module';
 import { resolve, dirname, isAbsolute } from 'node:path';
@@ -13,10 +14,12 @@ import { pkgDir, requirePkg, tryRequire } from './resolve.mjs';
 import * as kit from './pptx-kit.mjs';
 import builtins from './pptx-renderers.mjs';
 import * as helpers from './pptx-renderers.mjs';
+import { getTheme } from './pptx-themes.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name, def) => { const i = args.indexOf(name); return i >= 0 ? args.splice(i, 2)[1] : def; };
 const rendererFile = flag('--renderers');
+const themeArg = flag('--theme');
 const imgDirsArg = flag('--img-dirs', 'img,assets,shots');
 const minPt = Number(flag('--min-pt', 15));
 const strict = args.includes('--strict');
@@ -45,15 +48,21 @@ if (rendererFile) {
   const mod = await import(pathToFileURL(resolve(rendererFile)).href);
   R = { ...R, ...(await mod.default({ ...kit, ...helpers })) };
 }
-pres.defineSlideMaster({
-  title: 'DECK', background: { color: kit.C.bg },
+// 主題：深色頁與淺色頁各一個母片；每頁轉換前把 kit.C 換成該模式的色票（版型函式都是呼叫當下才讀 C）
+const theme = getTheme(themeArg || process.env.DECK_THEME || meta.theme || '');
+const BASE_C = { ...kit.C };
+const setMode = (mode) => { if (!theme) return; for (const key of Object.keys(kit.C)) delete kit.C[key]; Object.assign(kit.C, BASE_C, theme[mode]); };
+const defMaster = (title) => pres.defineSlideMaster({
+  title, background: { color: kit.C.bg },
   slideNumber: { x: kit.W - kit.M - 0.9, y: kit.H - 0.42, w: 0.9, h: 0.3, fontFace: kit.FONT.ui, fontSize: minPt, color: kit.C.dim, align: 'right' },
 });
+if (theme) { setMode('dark'); defMaster('DECK_DARK'); setMode('light'); }
+defMaster('DECK');
 
 const k = new kit.Kit(pres, { imgDirs: imgDirsArg.split(',').map((d) => (isAbsolute(d) ? d : resolve(base, d))), minPt });
 k.qr = async (url, box, label) => {
   if (!QR) { k.warn('沒有 qrcode 套件，QR 改為文字網址'); k.text(url, { ...box, h: 0.6 }, { max: 15 }); return; }
-  const data = await QR.toDataURL(url, { margin: 1, errorCorrectionLevel: 'M', width: 600, color: { dark: '#0B1F2A', light: '#FFFFFF' } });
+  const data = await QR.toDataURL(url, { margin: 1, errorCorrectionLevel: 'M', width: 600, color: { dark: `#${kit.C.qr || '0B1F2A'}`, light: '#FFFFFF' } });
   const text = label || url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   const lines = Math.max(1, Math.ceil(text.length * 0.62 * minPt / 72 / (box.w - 0.2)));
   const labelH = 0.14 + lines * minPt * 1.25 / 72;
@@ -73,7 +82,9 @@ for (const [i, s] of slides.entries()) {
     throw new Error(`第 ${k.n} 頁（${s.type}）沒有 PPTX 版型。請用 --renderers 補上。`);
   }
   const r = typeof renderer === 'function' ? renderer : (missing.add(s.type), R.generic);
-  k.slide = pres.addSlide({ masterName: 'DECK' });
+  const dark = !!theme && (s.mode ? s.mode === 'dark' : theme.darkTypes.includes(s.type));
+  setMode(dark ? 'dark' : 'light');
+  k.slide = pres.addSlide({ masterName: dark ? 'DECK_DARK' : 'DECK' });
   try {
     await r(s, k, content);
   } catch (e) {

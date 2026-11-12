@@ -12,6 +12,10 @@ export const C = {
 export const FONT = { ui: 'Microsoft JhengHei', mono: 'Menlo' };
 export const ACCENTS = ['teal', 'amber', 'coral', 'green'];
 export const col = (name, fallback = C.teal) => C[name] || (/^[0-9a-f]{6}$/i.test(name || '') ? name : fallback);
+// 色塊／線條用色：主題可另外定義 <名稱>Fill（例如淺底主題文字用藍、色條用金）；沒定義就跟文字色相同
+export const fillCol = (name, fallback) => C[`${name}Fill`] || col(name, fallback);
+// 判斷訊號色：主題有定義 ok／warn 就用，沒有就退回上游的 green／coral
+export const sem = (name) => (C[name] ? name : { ok: 'green', warn: 'coral' }[name] || name);
 
 // ---------- HTML 片段 → 段落 ----------
 const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
@@ -184,7 +188,8 @@ export class Kit {
     if (label) this.pill(label, { x: M, y: 0.38, color: cc, outline: chipColor === 'coral' || chipColor === 'green' });
     if (!title) return 0.95;
     const tagW = tag ? textWidth(tag.label, 15, true) + 0.5 : 0;
-    const f = this.text(title, { x: M, y: 0.86, w: W - 2 * M - tagW, h: 0.62 }, { max: 30, min: 22, bold: true, boldColor: null, valign: 'middle', lineH: 1.2, quiet: false });
+    const f = this.text(title, { x: M, y: 0.86, w: W - 2 * M - tagW, h: 0.62 }, { max: 30, min: 22, bold: true, boldColor: null, valign: 'middle', lineH: 1.2, quiet: false, ...(C.heading ? { color: C.heading } : {}) });
+    if (C.rule) this.slide.addShape(this.pres.shapes.RECTANGLE, { x: M, y: 1.53, w: 0.6, h: 0.045, fill: { color: C.rule }, line: { color: C.rule, transparency: 100 } });   // 主題：標題下金色短線
     if (tag) {
       const tw = textWidth(plain(title), f.pt, true);
       this.pill(tag.label, { x: Math.min(M + tw + 0.25, W - M - tagW), y: 0.98, color: col(tag.color), outline: true });
@@ -256,9 +261,9 @@ export class Kit {
 
   /** 卡片：標題（色）＋內文；bar=true 左側色條。回傳卡片 box */
   card(box, { h: title, p, ul, color = 'teal', bar = false, center = false, fill = C.card, img, titleMax = 20, bodyMax = 17, bodyColor = C.muted }) {
-    const c = col(color);
+    const c = col(color), cf = fillCol(color);
     this.rect(box, { fill, radius: 0.16 });
-    if (bar) this.slide.addShape(this.pres.shapes.RECTANGLE, { x: box.x, y: box.y + 0.14, w: 0.07, h: box.h - 0.28, fill: { color: c }, line: { color: c, transparency: 100 } });
+    if (bar) this.slide.addShape(this.pres.shapes.RECTANGLE, { x: box.x, y: box.y + 0.14, w: 0.07, h: box.h - 0.28, fill: { color: cf }, line: { color: cf, transparency: 100 } });
     const ix = box.x + 0.26, iw = box.w - 0.46;
     let y = box.y + 0.2;
     const bottom = box.y + box.h - 0.18;
@@ -302,7 +307,7 @@ export class Kit {
         text: ps.length ? toRuns(ps, pt, { color, boldColor: isHead || isFirst ? color : C.amber, bold: isHead || isFirst }) : '',
         options: {
           fill: { color: isHead ? C.card2 : C.bg }, valign: 'top', margin: [padY, padX, padY, padX],
-          border: [isHead ? { type: 'none' } : border, { type: 'none' }, isHead ? { type: 'solid', pt: 1.5, color: headColor } : border, { type: 'none' }],
+          border: [isHead ? { type: 'none' } : border, { type: 'none' }, isHead ? { type: 'solid', pt: 1.5, color: C.rule || headColor } : border, { type: 'none' }],
         },
       };
     }));

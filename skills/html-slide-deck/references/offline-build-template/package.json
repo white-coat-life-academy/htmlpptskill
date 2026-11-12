@@ -3,7 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "description": "離線單檔 reveal.js 簡報（content.js＋build.js）",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "node build.js",
     "check": "node scripts/check.mjs",
@@ -17,7 +19,8 @@
   "devDependencies": {
     "jsqr": "^1.4.0",
     "playwright": "^1.56.0",
+    "pngjs": "^7.0.0",
     "pptxgenjs": "^4.0.1",
-    "pngjs": "^7.0.0"
+    "subset-font": "^2.9.0"
   }
 }
