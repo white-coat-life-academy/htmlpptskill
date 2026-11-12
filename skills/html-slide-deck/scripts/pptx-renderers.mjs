@@ -150,7 +150,7 @@ export default function builtins() {
 
     decision(s, k) {
       const rows = (s.rows || []).map(({ q, yes, to, down }) => [q, `${yes} → ${to.lv} ${to.t}`, down || '']);
-      return R.table({ ...s, rows, headRow: ['判斷', '符合條件', '繼續判斷'],
+      return R.table({ ...s, rows, headRow: ['判斷', '符合條件', '往下'],
         foot: s.last && `${s.last.lv}　${s.last.t}` }, k);
     },
 
