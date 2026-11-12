@@ -1,5 +1,5 @@
 // 內建版型：content.js 的 type → 原生 PPTX 頁面。欄位名稱對齊 offline-build-template 與常見講座 deck。
-// 自訂版型用 --renderers 傳入，同名會覆蓋這裡的版本。每個函式簽名：(s, k) => void | Promise<void>，k 是 Kit。
+// 自訂版型用 --renderers 傳入，同名會覆蓋這裡的版本。函式收 (s, k, content)，k 是 Kit，content 是 content.js 的匯出。
 import { C, W, H, M, FONT, ACCENTS, col, plain, textWidth } from './pptx-kit.mjs';
 
 const ul = (items) => `<ul>${items.map((x) => `<li>${x}</li>`).join('')}</ul>`;
@@ -94,7 +94,8 @@ export default function builtins() {
       let top = 1.75;
       if (s.lead) top += k.text(s.lead, { x: M, y: top, w: W - 2 * M, h: 0.9 }, { max: 20, color: C.muted }).need + 0.15;
       grid(k, s.items, s.n === 6 ? 3 : s.n || s.items.length, { y: top, h: bottom - top }, (it, i) => ({
-        h: [it.k && `<b>${it.k}</b>`, it.h].filter(Boolean).join('<br>'), p: it.p || it.tag, ul: it.ul, img: it.img,
+        h: [it.k && `<b>${it.k}</b>`, it.h].filter(Boolean).join('<br>'),
+        p: it.p && it.tag ? `${it.p}<br>${it.tag}` : it.p || it.tag, ul: it.ul, img: it.img,
         color: it.c || (s.colors || ACCENTS)[i % (s.colors || ACCENTS).length], center: !!it.img,
       }));
     },
@@ -145,6 +146,27 @@ export default function builtins() {
       let top = 1.75;
       if (s.lead) top += k.text(s.lead, { x: M, y: top, w: W - 2 * M, h: 0.9 }, { max: 20, color: C.muted }).need + 0.15;
       k.table(s.rows, { head: s.headRow, y: top, h: bottom - top, max: s.small ? 20 : 22 });
+    },
+
+    decision(s, k) {
+      const rows = (s.rows || []).map(({ q, yes, to, down }) => [q, `${yes} → ${to.lv} ${to.t}`, down || '']);
+      return R.table({ ...s, rows, headRow: ['判斷', '符合條件', '繼續判斷'],
+        foot: s.last && `${s.last.lv}　${s.last.t}` }, k);
+    },
+
+    async tool(s, k, { tools, cats }) {
+      const tool = tools[s.key];
+      k.head(tool.name, { chip: cats?.[tool.cat]?.name });
+      const [textBox, side] = k.split([2, 1], { y: 1.75, h: 5.1 });
+      k.stack([
+        { t: 'text', html: tool.one, max: 23 },
+        { t: 'text', html: '教學用法', max: 19, bold: true, color: C.teal },
+        { t: 'list', items: tool.use, max: 19 },
+      ], textBox, { valign: 'top' });
+      let shot;
+      try { shot = k.resolve(s.key); } catch { /* 範本允許省略截圖 */ }
+      if (shot) k.image(shot, { ...side, h: 2.0 }, { frame: true });
+      await k.qr(tool.url, { x: side.x + (side.w - 2.35) / 2, y: shot ? 4 : 2.1, w: 2.35 });
     },
 
     figure(s, k) {

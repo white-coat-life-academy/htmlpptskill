@@ -6,24 +6,24 @@ description: 用 reveal.js 製作或修改 HTML 簡報（單檔、可離線、�
 # HTML 簡報（reveal.js）完整流程
 
 `$SKILL` 代表本檔所在目錄（Claude Code：`~/.claude/skills/html-slide-deck`；Codex：`~/.codex/skills/…`；Gemini：`~/.gemini/skills/…`；Grok：`~/.grok/skills/…`）。腳本在 `$SKILL/scripts/`，範本在 `$SKILL/references/`。
-腳本需要 Node 20+（Playwright 不支援 18）、`playwright`（＋Chromium）、`pptxgenjs`、Python 3（`segno`、`pillow`、`python-pptx`）；套件從**執行目錄往上**找 `node_modules`，找不到再找 npm 全域（可設 `SKILL_PKG_ROOT`）。依賴請使用者在終端機先裝好，不要在對話中代裝。
-**固定規則**：開始前先讀 `$SKILL/references/fixed-rules.md`，全程遵守（頁尾署名、課程簡報不得刪頁、醫療用語與文獻引用）。
+腳本需要 Node 20+。做法 B 在簡報專案內用 `npm ci` 安裝 Playwright 與 PptxGenJS。第一次可用 `npx playwright install chromium`，已有 Chromium 則可設 `CHROMIUM_PATH`。分開使用腳本時，套件由執行目錄往上搜尋，亦可設 `SKILL_PKG_ROOT`。部分輔助腳本需 Python 3。
+署名、Logo、配色和內容規格依使用者與專案規範。有專用的品牌簡報 skill 時，沿用它的內容與視覺指引。`references/fixed-rules.md` 保留吳易澄醫師自用的設定，供製作他的簡報時參考。
 
-## 0. 先問三件事（一次問完）
+## 0. 確認情境（已有資訊可直接沿用）
 
 1. 觀眾與難度：專業版（可放指令）或零基礎版（全篇不放終端機指令，指令只進講者備註）。
 2. 圖片來源：AI 底圖（任何生圖工具；本 skill 附 `scripts/gen-image.sh`，預設綁 Codex CLI、可用 `GEN_CMD` 換）、真實截圖（Playwright，免登入頁面）、或兩者。需要登入的畫面請使用者提供截圖。
 3. 現場：有沒有網路（沒有→交付前一定內嵌）、要不要 QR、要不要特效（要→載入 `html-slide-effects`；醫學／學術場預設穩重）。
 
-配色與字型沿用 `references/reveal-template.html` 的 tokens（bg 0B1F2A、amber F2B84B、teal 3FC1B7、coral E8846B、green 6FCF97；字型堆疊 Noto Sans TC → PingFang TC → Microsoft JhengHei）。
+未指定品牌樣式時，用 `references/reveal-template.html` 的預設色票與字型（Noto Sans TC → PingFang TC → Microsoft JhengHei）。
 
 ## 1. 大綱 → 確認 → 生成
 
 - 規劃前讀 `references/design-principles.md`（受眾→結論→敘事結構、統一設計系統、一份來源多種輸出、互動區塊怎麼挑；附現成工具清單）。
-- 先輸出大綱表（頁碼｜標題｜內容摘要｜標記 [BG]/[SHOT]/[INTERACT]/[POLL]/[VIZ]），**等使用者確認再寫 HTML**。
+- 用頁碼、標題、內容摘要和素材標記規劃大綱。使用者要求先審大綱時，等確認再製作。
 - **兩種做法，先選一種**：
   - **A 單檔手寫**（≤25 頁、一次交付）：複製 `references/reveal-template.html`，直接寫 `<section>`。範本預設從 CDN 載 reveal.js 5.2；交付前跑 `node $SKILL/scripts/inline-assets.mjs in.html out.html` 內嵌 reveal.js 與圖片（執行目錄要有 `reveal.js` 套件：`npm i reveal.js@5`）。
-  - **B 內容／版型分離**（>25 頁、多輪改稿、要離線、要 QR 驗證）：複製 `references/offline-build-template/` 成新專案，填 `PLAN.md`，`content.js` 一頁一個物件（`type` 決定版型、`notes` 為備註），`npm install && npm run all` 產出 `dist/index.html`（reveal.js、CSS、圖片、QR 全內嵌）。範本是 8 頁中性起手；50 頁完整實例在 repo `examples/workshop-2026/`。
+  - **B 內容／版型分離**適合同時要 HTML 與可編輯 PPTX 的案件，也適用多輪改稿。複製 `references/offline-build-template/` 成新專案，在 `content.js` 每頁填一個物件（`type` 決定版型、`notes` 為備註）。`npm ci` 後，執行 `npm run export -- --skill-dir "$SKILL"` 一次產出離線 HTML 和可編輯 PPTX。只要 HTML 時用 `npm run all`。可用版型見[範本說明](references/offline-build-template/README.md)。
 - 一頁一個 `<section>`，講者備註放 `<aside class="notes">`（播放時按 S）。
 - 版型只用範本裡的 class：`chip`、`card`、`grid g2/g3/g4`、`steps`、`mock`（假瀏覽器框放截圖）、`qrcard`、`note`、`chapter`、`viz`（滑桿前後對比）。
 - 章節頁 `data-background-image` 放底圖，opacity 0.9–0.95；內容頁若要底圖用 0.35 以下。
@@ -72,14 +72,14 @@ node $SKILL/scripts/build-handout.mjs <dir> <out.pptx> "<作者>"   # 一頁一�
 ```
 **PDF 講義**（最快、跨平台）：`node $SKILL/scripts/print-pdf.mjs <index.html> <out.pdf>`（reveal 的 `?print-pdf`，fragment 全展開；範本已設 `pdfSeparateFragments:false`，否則每個 fragment 各印一頁）。
 
-**原生可編輯 PPTX，做法 B 一鍵轉**（content.js 已經是結構化內容，不必逐頁手刻）：
+**原生可編輯 PPTX**。單獨轉檔可用以下指令。
 ```bash
-node $SKILL/scripts/content-to-pptx.mjs content.js out.pptx [--renderers my-renderers.mjs] [--img-dirs img,assets,shots] [--min-pt 15] [--strict]
+node $SKILL/scripts/content-to-pptx.mjs content.js out.pptx [--renderers my-renderers.mjs] [--img-dirs img,assets,shots] [--min-pt 15] [--strict] [--require-renderers]
 ```
 - 16:9 寬版（13.333×7.5 吋）；文字、表格、卡片都是 PowerPoint 物件，講者備註帶入，QR 內嵌成圖（附超連結）。
-- 內建版型：title、section、ask/question、statement、quiz（`reveal:true` 標出正解）、cards/three、stats、flow/steps、table、figure（含 `marks` 圖上標記）、labels、compare、flips（正反面上下並列）、bars、photos、refs、end。欄位對不上或沒有對應版型就改用**通用版面**（標題＋條列＋第一張圖），並列出警告。
+- 內建版型包含 title、section、ask/question、statement、quiz、cards/three、stats、flow/steps、table、figure、labels、compare、decision、tool、flips、bars、photos、refs、end。單獨轉檔預設會提示並使用通用版面。加 `--require-renderers` 時，缺少版型或版型失敗會停止。
 - 專案自訂版型：`--renderers` 模組 `export default (kit) => ({ type: (s, k) => {...} })`，同名覆蓋內建；`kit` 有色票、`plain`、`textWidth`、`grid`、`marker`、`lvTag`；`k` 是 `pptx-kit.mjs` 的 `Kit`（`head`／`text`（自動縮字）／`stack`（直向堆疊並找出放得下的字級）／`card`／`table`／`image`（等比塞進框）／`note`／`src`／`qr`）。
-- 字級下限 `--min-pt`（預設 15pt）；放不下時寫 `<out>.pptx.warnings.txt`，`--strict` 會 exit 1。字寬是估算值（Microsoft JhengHei），**最後一定要用 `pptx-to-pdf.sh` 轉 PDF 拼 montage 看過**。
+- 字級下限 `--min-pt`（預設 15pt）。放不下時寫 `<out>.pptx.warnings.txt`，`--strict` 會 exit 1。字寬是估算值，交付前用可用的簡報軟體渲染並逐頁檢查。
 - 動畫、fragment、翻牌不轉。
 
 **原生可編輯 PPTX，手刻**（沒有 content.js 時）：用 `references/pptxgenjs-helpers.mjs`（theme＋helpers：chrome/title/card/pillRow/numberedList/twoCol/frame/mono）逐頁重建，範例見 `references/native-pptx-example.mjs`。字型 **Microsoft JhengHei**（Mac 與 Windows 的 PowerPoint 都有；PingFang 在 PowerPoint Mac 不可用）；等寬 Menlo／Consolas。媒體先轉 JPG。
@@ -90,7 +90,7 @@ node $SKILL/scripts/content-to-pptx.mjs content.js out.pptx [--renderers my-rend
 
 ## 6. 交付與收尾
 
-- 產物放使用者指定目錄（預設 `deliverables/<deck-name>/`）：`index.html`（單檔）、講義 PPTX／PDF、可編輯 PPTX。
+- 依使用者要的格式交付。做法 B 雙輸出放在同一次匯出的 `dist/exports/<版本>/`，有 `index.html`、`editable.pptx` 和 `qa/`。圖片講義或 PDF 可依需要另出。
 - 交付前：`QA_OFFLINE=1` 跑一次 QA；把播放方式寫給使用者：方向鍵翻頁、`S` 講者備註、`Esc`／`O` 總覽、`F` 全螢幕、`B` 黑屏、`G` 跳頁、`?print-pdf` 匯出、`?view=scroll` 手機捲動閱讀。
 - 部署、開 repo 前**一定先問**。
 - 有動畫的 deck 必加 STATIC 開關（見 `html-slide-effects`），QA 截圖與 PDF 才是最終狀態。

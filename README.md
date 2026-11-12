@@ -90,6 +90,8 @@ python3 -m pip install -r requirements.txt                # segno、pillow、pyt
 
 ## 10 分鐘看到第一份成品
 
+需要同時交付 HTML 和可編輯 PPTX 時，複製 [做法 B 範本](skills/html-slide-deck/references/offline-build-template/)並編輯 `content.js`。執行 `npm ci`、`npx playwright install chromium`，再執行 `npm run export -- --skill-dir "$SKILL"`。通過檢查後，可在 `dist/exports/<版本>/` 取得兩份檔案和 HTML 逐頁截圖。只要 HTML 時仍可用 `npm run all`。
+
 ```bash
 mkdir my-deck && cd my-deck && npm init -y
 npm i -D playwright && npx playwright install chromium && npm i reveal.js@5 pptxgenjs
@@ -116,7 +118,7 @@ node $SKILL/scripts/print-pdf.mjs index.html handout.pdf               # PDF 講
 ```
 問三件事（觀眾／有沒有網路／要不要特效）→ 大綱表（等你確認）
   ├─ A 單檔手寫（≤25 頁）      references/reveal-template.html → inline-assets.mjs
-  └─ B 內容／版型分離（>25 頁） references/offline-build-template/：content.js 一頁一個物件 → npm run all
+  └─ B 內容／版型分離（雙輸出、多輪改稿） references/offline-build-template/：content.js → npm run export
 圖片：AI 底圖（任何生圖工具）、Playwright 真實截圖、segno QR（每張 .qrcard 帶 data-url）
 QA：qa-screenshots.mjs ─ 截圖、溢出、JS 錯誤、對外請求、QR 逐張解碼比對、montage.png ─ 有問題 exit 1
 交付：index.html（單檔）＋ 講義 PPTX ＋ PDF（＋ 原生可編輯 PPTX）
@@ -640,7 +642,7 @@ skills/
                                   content-to-pptx（content.js → 原生可編輯 PPTX；pptx-kit 版面工具、pptx-renderers 內建版型）
     references/
       reveal-template.html        深色版型：chip／card／grid／steps／mock／qrcard／viz／互動頁（reveal.js 5.2）
-      offline-build-template/     做法 B：content.js＋build.js＋check.mjs＋PLAN.md＋角色檔
+      offline-build-template/     做法 B：content.js＋build.js＋check.mjs＋export.mjs＋PLAN.md＋角色檔
       pptxgenjs-helpers.mjs       原生 PPTX 的 theme 與 helper（＋ native-pptx-example.mjs）
       pitfalls.md                 踩過的雷與可複用片段
       design-principles.md        規劃與設計原則、現成工具（整理自 X 分享，SKILL.md 第 1 步引用）

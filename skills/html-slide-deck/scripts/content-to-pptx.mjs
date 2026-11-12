@@ -1,33 +1,36 @@
 // content.js（做法 B：一頁一物件）→ 原生可編輯 PPTX。文字、表格、卡片都是 PowerPoint 物件，講者備註帶入。
-// 用法：node content-to-pptx.mjs <content.js> <out.pptx> [--renderers my-renderers.mjs] [--img-dirs img,assets,shots] [--min-pt 15] [--strict]
+// 用法：node content-to-pptx.mjs <content.js> <out.pptx> [--renderers my-renderers.mjs] [--img-dirs img,assets,shots] [--min-pt 15] [--strict] [--require-renderers]
 //   --renderers：自訂版型模組，export default (kit 工具) => ({ type: (s, k) => {...} })，同名覆蓋內建版型
 //   --img-dirs：圖片搜尋目錄（相對 content.js），依序找 <name>.jpg/.png
 //   --strict：有文字可能超框的警告就 exit 1
+//   --require-renderers：缺少版型或版型轉換失敗就停止
 // 動畫、翻牌、fragment 不轉；翻牌頁改為正反面上下並列。字型 Microsoft JhengHei（Mac／Windows PowerPoint 都有）。
 import { createRequire } from 'node:module';
 import { resolve, dirname, isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { writeFileSync, rmSync } from 'node:fs';
-import { requirePkg, tryRequire } from './resolve.mjs';
+import { pkgDir, requirePkg, tryRequire } from './resolve.mjs';
 import * as kit from './pptx-kit.mjs';
 import builtins from './pptx-renderers.mjs';
 import * as helpers from './pptx-renderers.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name, def) => { const i = args.indexOf(name); return i >= 0 ? args.splice(i, 2)[1] : def; };
-const strict = args.includes('--strict') && args.splice(args.indexOf('--strict'), 1);
 const rendererFile = flag('--renderers');
 const imgDirsArg = flag('--img-dirs', 'img,assets,shots');
 const minPt = Number(flag('--min-pt', 15));
-const [contentArg, outArg] = args;
+const strict = args.includes('--strict');
+const requireRenderers = args.includes('--require-renderers');
+const [contentArg, outArg] = args.filter((arg) => !['--strict', '--require-renderers'].includes(arg));
 if (!contentArg || !outArg) {
-  console.error('用法：node content-to-pptx.mjs <content.js> <out.pptx> [--renderers file.mjs] [--img-dirs img,assets,shots] [--min-pt 15] [--strict]');
+  console.error('用法：node content-to-pptx.mjs <content.js> <out.pptx> [--renderers file.mjs] [--img-dirs img,assets,shots] [--min-pt 15] [--strict] [--require-renderers]');
   process.exit(2);
 }
 
 const contentPath = resolve(contentArg);
 const base = dirname(contentPath);
-const { slides, meta = {} } = createRequire(import.meta.url)(contentPath);
+const content = createRequire(import.meta.url)(contentPath);
+const { slides, meta = {} } = content;
 if (!Array.isArray(slides) || !slides.length) { console.error(`${contentArg} 沒有匯出 slides 陣列`); process.exit(2); }
 
 const PptxGenJS = requirePkg('pptxgenjs');
@@ -36,6 +39,12 @@ const pres = new PptxGenJS();
 pres.layout = 'LAYOUT_WIDE';
 pres.title = kit.plain(meta.title || '');
 pres.author = kit.plain(meta.author || '');
+
+let R = builtins();
+if (rendererFile) {
+  const mod = await import(pathToFileURL(resolve(rendererFile)).href);
+  R = { ...R, ...(await mod.default({ ...kit, ...helpers })) };
+}
 pres.defineSlideMaster({
   title: 'DECK', background: { color: kit.C.bg },
   slideNumber: { x: kit.W - kit.M - 0.9, y: kit.H - 0.42, w: 0.9, h: 0.3, fontFace: kit.FONT.ui, fontSize: minPt, color: kit.C.dim, align: 'right' },
@@ -56,30 +65,37 @@ k.qr = async (url, box, label) => {
   });
 };
 
-let R = builtins();
-if (rendererFile) {
-  const mod = await import(pathToFileURL(resolve(rendererFile)).href);
-  R = { ...R, ...(await mod.default({ ...kit, ...helpers })) };
-}
-
 const missing = new Set();
 for (const [i, s] of slides.entries()) {
   k.n = i + 1;
+  const renderer = Object.hasOwn(R, s.type) ? R[s.type] : undefined;
+  if (typeof renderer !== 'function' && requireRenderers) {
+    throw new Error(`第 ${k.n} 頁（${s.type}）沒有 PPTX 版型。請用 --renderers 補上。`);
+  }
+  const r = typeof renderer === 'function' ? renderer : (missing.add(s.type), R.generic);
   k.slide = pres.addSlide({ masterName: 'DECK' });
-  const r = R[s.type] || (missing.add(s.type), R.generic);
   try {
-    await r(s, k);
+    await r(s, k, content);
   } catch (e) {
     // 欄位跟內建版型對不上：清掉畫到一半的物件，改用通用版面，不讓整份失敗
-    if (r === R.generic) throw new Error(`第 ${i + 1} 頁（${s.type}）轉換失敗：${e.message}`);
+    if (requireRenderers || r === R.generic) throw new Error(`第 ${k.n} 頁（${s.type}）轉換失敗：${e.message}`, { cause: e });
     k.warn(`版型 ${s.type} 轉換失敗（${e.message}），改用通用版面`);
     k.slide._slideObjects.length = 0;   // pptxgenjs 內部陣列；沒有公開的移除 API
-    await R.generic(s, k);
+    await R.generic(s, k, content);
   }
   if (s.notes) k.slide.addNotes(kit.plain(s.notes));
 }
 
-await pres.writeFile({ fileName: resolve(outArg) });
+const JSZip = createRequire(resolve(pkgDir('pptxgenjs'), 'package.json'))('jszip');
+const pptx = await pres.write({ outputType: 'nodebuffer' });
+const zip = await JSZip.loadAsync(pptx);
+const manifestPath = '[Content_Types].xml';
+const manifest = await zip.file(manifestPath).async('string');
+// PptxGenJS 4.0.1 lists one slide master per slide but writes only the actual master.
+const masterOverride = /<Override PartName="\/(ppt\/slideMasters\/slideMaster\d+\.xml)" ContentType="application\/vnd\.openxmlformats-officedocument\.presentationml\.slideMaster\+xml"\/>/g;
+const corrected = manifest.replace(masterOverride, (override, part) => zip.file(part) ? override : '');
+if (corrected !== manifest) zip.file(manifestPath, corrected);
+writeFileSync(resolve(outArg), corrected === manifest ? pptx : await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }));
 if (missing.size) console.warn(`沒有對應版型、改用通用版面：${[...missing].join(', ')}（用 --renderers 補）`);
 const log = `${resolve(outArg)}.warnings.txt`;
 rmSync(log, { force: true });

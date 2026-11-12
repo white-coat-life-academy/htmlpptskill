@@ -70,6 +70,8 @@ Scripts look for `node_modules` **from the working directory upwards**, then in 
 
 ## First deck in 10 minutes
 
+For offline HTML and native editable PPTX in one run, copy the [approach B template](skills/html-slide-deck/references/offline-build-template/), edit `content.js`, install with `npm ci` and `npx playwright install chromium`, then run `npm run export -- --skill-dir "$SKILL"`. Both files and the browser QA screenshots are grouped under `dist/exports/<version>/` after the checks pass.
+
 ```bash
 mkdir my-deck && cd my-deck && npm init -y
 npm i -D playwright && npx playwright install chromium && npm i reveal.js@5 pptxgenjs

@@ -11,7 +11,8 @@ import jsQR from 'jsqr';
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { slides } = require(path.join(root, 'content.js'));
-const out = path.join(root, 'check-output');
+const htmlDir = path.resolve(process.argv[2] || path.join(root, 'dist'));
+const out = path.resolve(process.argv[3] || path.join(root, 'check-output'));
 fs.mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -22,8 +23,9 @@ try {
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(e.message.slice(0, 300)));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text().slice(0, 300)); });
-  await page.goto(pathToFileURL(path.join(root, 'dist/index.html')).href);
+  await page.goto(pathToFileURL(path.join(htmlDir, 'index.html')).href);
   await page.waitForFunction(() => window.Reveal && Reveal.isReady(), null, { timeout: 60000 });
+  await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => Reveal.configure({ transition: 'none', backgroundTransition: 'none', autoAnimateDuration: 0 }));
   const idx = await page.evaluate(() => Reveal.getSlides().map(s => { const { h, v } = Reveal.getIndices(s); return { h, v: v || 0 }; }));
   if (idx.length !== slides.length) problems.push(`頁數 ${idx.length} ≠ content.js ${slides.length}`);
@@ -49,7 +51,7 @@ try {
 } finally { await browser.close(); }
 if (errors.length) problems.push(`JS／資源錯誤 ${errors.length} 則：${errors.slice(0, 3).join(' | ')}`);
 if (external.length) problems.push(`對外請求 ${external.length} 個（離線會壞）：${external.slice(0, 3).join(' | ')}`);
-console.log(`共 ${slides.length} 頁，截圖在 check-output/`);
+console.log(`共 ${slides.length} 頁，截圖在 ${path.relative(root, out)}/`);
 if (warnings.length) console.log('警告：\n- ' + warnings.join('\n- '));
 if (problems.length) { console.log('問題：\n- ' + problems.join('\n- ')); process.exit(1); }
 console.log('全部通過：無溢出、無 JS 錯誤、無對外請求、QR 皆與 data-url 相符');

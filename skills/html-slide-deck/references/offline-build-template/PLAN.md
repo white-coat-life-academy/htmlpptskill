@@ -9,7 +9,7 @@
 - **待決事項**：
 
 ## 階段
-1. 大綱（頁碼｜標題｜type｜摘要）→ 確認
-2. content.js → `npm run all` 通過
-3. 看 check-output/ 逐頁截圖 → 修 → 再驗
-4. 交付 dist/index.html（＋講義 PPTX／PDF，用 html-slide-deck 的腳本）
+1. 整理大綱（頁碼｜標題｜type｜摘要），依需求先審稿
+2. 完成 `content.js`，用 `npm run export` 產出 HTML 與可編輯 PPTX，或用 `npm run all` 產出 HTML
+3. 逐頁檢查 HTML 截圖與需要交付的 PPTX
+4. 依需求交付對應格式

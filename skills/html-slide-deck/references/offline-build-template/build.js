@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const QR = require('qrcode');
 const { slides, tools = {}, cats = [], meta = {} } = require('./content.js');
+const out = path.resolve(process.argv[2] || path.join(__dirname, 'dist'));
 
 const rv = (p) => fs.readFileSync(path.join(__dirname, 'node_modules/reveal.js', p), 'utf8');
 const img = (name) => {
@@ -215,7 +216,8 @@ const EXTRA_CSS = fs.readFileSync(path.join(__dirname, 'styles/deck.css'), 'utf8
   const secs = [];
   for (const [i, s] of slides.entries()) {
     if (!R[s.type]) throw new Error('no renderer ' + s.type);
-    secs.push(`\n<!-- ${i + 1} ${s.type} -->\n` + (await R[s.type](s)));
+    const markup = await R[s.type](s);
+    secs.push(`\n<!-- ${i + 1} ${s.type} -->\n` + markup.replace('<section', `<section data-slide-type="${esc(s.type)}"`));
   }
   const strip = (css) => css.replace(/@import[^;]+;/g, '');
   const html = `<!DOCTYPE html>
@@ -239,7 +241,7 @@ Reveal.initialize({ width: 1280, height: 720, margin: 0.06, hash: true, transiti
   center: true, progress: true, controls: true, slideNumber: 'c/t', pdfSeparateFragments: false, plugins: [ RevealNotes ] });
 </script>
 </body></html>`;
-  fs.mkdirSync(path.join(__dirname, 'dist'), { recursive: true });
-  fs.writeFileSync(path.join(__dirname, 'dist/index.html'), html);
+  fs.mkdirSync(out, { recursive: true });
+  fs.writeFileSync(path.join(out, 'index.html'), html);
   console.log('slides', slides.length, 'bytes', html.length);
 })();
